@@ -1,0 +1,24 @@
+# Gradle / build
+.gradle/
+build/
+out/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Forge dev runtime
+run/
+logs/
+crash-reports/
+
+# Logs
+*.log
+*.log.gz
+debug.log
+latest.log
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
