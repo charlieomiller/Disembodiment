@@ -1,0 +1,8 @@
+{
+  "dematerializer_start_buffer": {
+    "subtitles": "sounds.disembodiment.dematerializer_start_buffer",
+    "sounds": [
+      "disembodiment:dematerializer_start_buffer"
+    ]
+  }
+}

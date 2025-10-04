@@ -1,4 +1,6 @@
 {
   "item.disembodiment.inkor": "Inkor",
-  "block.disembodiment.dematerializer": "Dematerializer"
+  "block.disembodiment.dematerializer": "Dematerializer",
+
+  "sounds.disembodiment.dematerializer_start_buffer": "Dematerialize Whirring (Disembodiment)"
 }

@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "/+/",
+    "#$#",
+    "==="
+  ],
+  "key": {
+    "$": {
+      "item": "minecraft:diamond_block"
+    },
+    "#": {
+      "item": "minecraft:soul_lantern"
+    },
+    "/": {
+      "item": "minecraft:bone"
+    },
+    "+": {
+      "item": "minecraft:end_crystal"
+    },
+    "=": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "item": "disembodiment:dematerializer"
+  }
+}

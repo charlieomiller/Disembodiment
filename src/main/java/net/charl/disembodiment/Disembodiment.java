@@ -2,7 +2,10 @@ package net.charl.disembodiment;
 
 import com.mojang.logging.LogUtils;
 import net.charl.disembodiment.block.ModBlocks;
+import net.charl.disembodiment.block.entity.ModBlockEntities;
+import net.charl.disembodiment.config.ModConfigs;
 import net.charl.disembodiment.item.ModItems;
+import net.charl.disembodiment.sound.ModSounds;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
@@ -11,7 +14,9 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -32,6 +37,18 @@ public class Disembodiment
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
+
+        ModSounds.register(modEventBus);
+
+        ModLoadingContext.get().registerConfig(
+                ModConfig.Type.SERVER,
+                ModConfigs.SERVER_SPEC,
+                "disembodiment-server.toml"
+        );
+
+
+
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
 

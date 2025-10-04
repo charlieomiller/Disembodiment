@@ -1,6 +1,7 @@
 package net.charl.disembodiment.block;
 
 import net.charl.disembodiment.Disembodiment;
+import net.charl.disembodiment.block.custom.DematerializerBlock;
 import net.charl.disembodiment.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -19,7 +20,7 @@ public class ModBlocks {
             DeferredRegister.create(ForgeRegistries.BLOCKS, Disembodiment.MOD_ID);
 
     public static final RegistryObject<Block> DEMATERIALIZER = registerBlock("dematerializer",
-            () -> new Block(BlockBehaviour.Properties.copy(Blocks.GOLD_BLOCK)));
+            () -> new DematerializerBlock(BlockBehaviour.Properties.copy(Blocks.ENCHANTING_TABLE).noOcclusion()));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
