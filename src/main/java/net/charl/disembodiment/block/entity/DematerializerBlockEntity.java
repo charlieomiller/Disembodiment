@@ -77,8 +77,7 @@ public class DematerializerBlockEntity extends BlockEntity {
                                 );
                             }
                         }
-                        pLevel.playSeededSound(null, pPos.getX(), pPos.getY(), pPos.getZ(),
-                                ModSounds.DEMATERIALIZER_START_BUFFER.get(), SoundSource.BLOCKS, 1f, 1f, 0); }
+                    }
                     t.bufferTicks--;
                     changed = true;
                     if (t.bufferTicks <= 0 && t.mainTicks > 0) {
