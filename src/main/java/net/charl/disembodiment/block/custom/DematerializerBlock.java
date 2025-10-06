@@ -5,6 +5,7 @@ import net.charl.disembodiment.block.entity.ModBlockEntities;
 import net.charl.disembodiment.config.ModConfigs;
 import net.charl.disembodiment.item.ModItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -72,6 +73,21 @@ public class DematerializerBlock extends BaseEntityBlock {
         return createTickerHelper(pBlockEntityType, ModBlockEntities.DEMATERIALIZER_BE.get(),
                 (pLevel1, pPos, pState1, pBlockEntity) -> pBlockEntity.tick(pLevel1, pPos, pState1));
 
+    }
+
+    @Override
+    public void onRemove(BlockState oldState, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!oldState.is(newState.getBlock())) {
+            if (!level.isClientSide) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof DematerializerBlockEntity demat && level instanceof ServerLevel sl) {
+                    demat.onBroken(sl);
+                }
+            }
+            super.onRemove(oldState, level, pos, newState, isMoving);
+        } else {
+            super.onRemove(oldState, level, pos, newState, isMoving);
+        }
     }
 
     private static boolean isDematerializerFuel(ItemStack pStack) { return pStack.is(ModItems.INKOR.get()); }

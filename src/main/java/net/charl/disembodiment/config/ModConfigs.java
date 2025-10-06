@@ -1,5 +1,6 @@
 package net.charl.disembodiment.config;
 
+import ca.weblite.objc.Proxy;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ModConfigs {
@@ -16,6 +17,7 @@ public class ModConfigs {
     public static final class Server {
         public final ForgeConfigSpec.IntValue secondsPerInkor;
         public final ForgeConfigSpec.IntValue secondsBeforeDematerialization;
+        public final ForgeConfigSpec.BooleanValue killDematerializedOnBreak;
 
         Server(ForgeConfigSpec.Builder b) {
             b.push("balance");
@@ -26,6 +28,9 @@ public class ModConfigs {
             secondsBeforeDematerialization = b
                     .comment("How many seconds the buffer between inserting Inkor and fully dematerializing lasts.")
                     .defineInRange("seconds_before_dematerialization", 1, 0, 60);
+            killDematerializedOnBreak = b
+                    .comment("Should dematerialized players be killed if root dematerializer is destroyed?")
+                    .define("killed_dematerialized_on_break", true);
             b.pop();
         }
     }

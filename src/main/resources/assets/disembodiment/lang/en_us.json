@@ -2,5 +2,7 @@
   "item.disembodiment.inkor": "Inkor",
   "block.disembodiment.dematerializer": "Dematerializer",
 
-  "sounds.disembodiment.dematerializer_start_buffer": "Dematerialize Whirring (Disembodiment)"
+  "sounds.disembodiment.dematerializer_start_buffer": "Dematerialize Whirring (Disembodiment)",
+
+  "death.attack.disembodiment.dematerialized": "%1$s slipped through the cracks."
 }
