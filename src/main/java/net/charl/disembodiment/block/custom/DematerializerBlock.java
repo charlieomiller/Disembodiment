@@ -27,8 +27,25 @@ import org.jetbrains.annotations.Nullable;
 
 public class DematerializerBlock extends BaseEntityBlock {
 
+    private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 12, 16);
+
     public DematerializerBlock(Properties pProperties) {
         super(pProperties);
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState blockState) {
+        return RenderShape.MODEL;
     }
 
     @Override

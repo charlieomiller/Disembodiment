@@ -2,6 +2,8 @@ package net.charl.disembodiment.block.entity;
 
 import net.charl.disembodiment.Disembodiment;
 import net.charl.disembodiment.config.ModConfigs;
+import net.charl.disembodiment.networking.ModNetworking;
+import net.charl.disembodiment.networking.TimerSyncS2C;
 import net.charl.disembodiment.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -35,6 +37,7 @@ public class DematerializerBlockEntity extends BlockEntity {
     private static class PlayerTimer {
         int bufferTicks; // amount of ticks before player is dematerialized after shilling Inkor
         int mainTicks; // amount of ticks player is dematerialized for
+        int mainTotal; // total ticks at the start of ACTIVE phase
         boolean active; // false = buffer countdown, true = main countdown
         @Nullable PlayerRestoreConditions restore; // pos, gamemode, etc to load whenever dematerialization ends
     }
@@ -79,7 +82,10 @@ public class DematerializerBlockEntity extends BlockEntity {
                     t.restore.restore(sp, sl.getServer()); // what an unfortunate naming scheme
                 }
             }
-
+            ModNetworking.CHANNEL.send(
+                    net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                    new TimerSyncS2C(TimerSyncS2C.Phase.NONE, -0, 0)
+            );
             timers.remove(id);
         }
 
@@ -109,6 +115,12 @@ public class DematerializerBlockEntity extends BlockEntity {
         sp.hurt(dmgSrc, Float.MAX_VALUE);System.out.println("KILLING " + sp.getName());
     }
 
+    // hot mama this tick logic is a mess. i see two major improvements that COULD happen
+    // 1) helper functions. it is silly how many things i write out multiple times for no earthly reason
+    // 2) theoretically i think this logic could all be ran once every second instead of once every tick
+    // another thing that has come up later. to avoid issues that come with the chunk containing the dematerializer unloading,
+    // i really ought to have made all the ticking and timing logic using some separated global ticker instead of sitting inside the block entity
+    // it isn't a big enough deal for me to want to bother fixing, but maybe if i revisit this mod i'll rewrite using a diff system from the ground up
     public void tick(Level pLevel, BlockPos pPos, BlockState pState) {
         if (pLevel.isClientSide) { return; }
         if (timers.isEmpty()) { return; }
@@ -128,6 +140,13 @@ public class DematerializerBlockEntity extends BlockEntity {
                         if (pLevel instanceof ServerLevel sl) { // Pattern matching casts sl equal to pLevel as type ServerLevel
                             ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(playerId);
                             if (sp != null) {
+                                // Send timer update to player for HUD update
+                                int total = ModConfigs.SERVER.secondsBeforeDematerialization.get() * DEFAULT_TICKS_PER_SEC;
+                                ModNetworking.CHANNEL.send(
+                                        net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                                        new TimerSyncS2C(TimerSyncS2C.Phase.BUFFER, t.bufferTicks, total)
+                                );
+                                // Sound player appropriately
                                 Holder<SoundEvent> sound = ModSounds.DEMATERIALIZER_START_BUFFER.getHolder().orElseThrow(); // Need to use Holder<SoundEvent> for ClientSoundPacket constructor
                                 ResourceLocation soundId = sound.value().getLocation();
                                 sp.connection.send(new ClientboundStopSoundPacket(soundId, SoundSource.BLOCKS)); // Avoids overlapping buffer noise
@@ -143,10 +162,14 @@ public class DematerializerBlockEntity extends BlockEntity {
                     if (t.bufferTicks <= 0 && t.mainTicks > 0) {
                         t.active = true;
                         changed = true;
+                        if (t.mainTotal <= 0) {
+                            t.mainTotal = t.mainTicks;
+                        }
                         // trigger start effects here
                         if (pLevel instanceof ServerLevel sl) { // Pattern matching casts sl equal to pLevel as type ServerLevel
                             ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(playerId);
                             if (sp != null) {
+                                // Capture player's pos, dimension, etc. Then switch to spectator
                                 t.restore = PlayerRestoreConditions.capture(sp);
                                 sp.stopRiding(); // Going into spectator while riding boat/horse/whatnot weird crud
                                 if (sp.gameMode.getGameModeForPlayer() != GameType.SPECTATOR) {
@@ -159,7 +182,13 @@ public class DematerializerBlockEntity extends BlockEntity {
 
                                     sp.onUpdateAbilities(); // And this to ensure that the player is ACTUALLY in spectator
                                 }
-                                System.out.println("Server thinks " + sp.getGameProfile().getName() + " + is now " + sp.gameMode.getGameModeForPlayer());
+                                //System.out.println("Server thinks " + sp.getGameProfile().getName() + " + is now " + sp.gameMode.getGameModeForPlayer());
+                                // Send timer update to player for HUD update
+                                t.mainTotal = t.mainTicks;
+                                ModNetworking.CHANNEL.send(
+                                        net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                                        new TimerSyncS2C(TimerSyncS2C.Phase.ACTIVE, t.mainTicks, t.mainTotal)
+                                );
                             }
                         }
                     } //else { System.out.println(playerId + " HAS " + t.bufferTicks + " BUFFER TICKS REMAINING"); }
@@ -171,10 +200,31 @@ public class DematerializerBlockEntity extends BlockEntity {
                 if (t.mainTicks > 0) {
                     t.mainTicks--;
                     changed = true;
+                    if (pLevel instanceof ServerLevel sl && t.mainTicks % DEFAULT_TICKS_PER_SEC == 0) { // Only send once per second instead of per tick
+                        ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(playerId);
+                        if (sp != null) {
+                            ModNetworking.CHANNEL.send(
+                                    net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                                    new TimerSyncS2C(TimerSyncS2C.Phase.ACTIVE, t.mainTicks, t.mainTotal)
+                            );
+                        }
+                    }
+
                     if (t.mainTicks == 0) {
                         t.active = false;
-                        it.remove();
                         changed = true;
+                        if (pLevel instanceof ServerLevel sl) {
+                            ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(playerId);
+                            if (sp != null) {
+                                ModNetworking.CHANNEL.send(
+                                        net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                                        new TimerSyncS2C(TimerSyncS2C.Phase.NONE, -0, 0)
+                                );
+                            }
+                        }
+
+
+                        it.remove();
                         // trigger end effects here
                         if (pLevel instanceof ServerLevel sl) { // Pattern matching casts sl equal to pLevel as type ServerLevel
                             ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(playerId);
@@ -203,6 +253,7 @@ public class DematerializerBlockEntity extends BlockEntity {
             entry.putUUID("Player", e.getKey());
             entry.putInt("Buffer", e.getValue().bufferTicks);
             entry.putInt("Main", e.getValue().mainTicks);
+            entry.putInt("Total", e.getValue().mainTotal);
             entry.putBoolean("Active", e.getValue().active);
             if (e.getValue().restore != null) {
                 entry.put("Restore", e.getValue().restore.toTag());
@@ -224,6 +275,7 @@ public class DematerializerBlockEntity extends BlockEntity {
                 PlayerTimer pt = new PlayerTimer();
                 pt.bufferTicks  = Math.max(0, entry.getInt("Buffer"));
                 pt.mainTicks    = Math.max(0, entry.getInt("Main"));
+                pt.mainTotal    = entry.contains("Total") ? entry.getInt("Total") : pt.mainTicks;
                 pt.active       = entry.getBoolean("Active");
                 if (entry.contains("Restore")) {
                     pt.restore  = PlayerRestoreConditions.fromTag(entry.getCompound("Restore"));

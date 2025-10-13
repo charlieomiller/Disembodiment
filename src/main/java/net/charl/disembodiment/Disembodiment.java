@@ -3,8 +3,10 @@ package net.charl.disembodiment;
 import com.mojang.logging.LogUtils;
 import net.charl.disembodiment.block.ModBlocks;
 import net.charl.disembodiment.block.entity.ModBlockEntities;
+import net.charl.disembodiment.config.ModClientConfigs;
 import net.charl.disembodiment.config.ModConfigs;
 import net.charl.disembodiment.item.ModItems;
+import net.charl.disembodiment.networking.ModNetworking;
 import net.charl.disembodiment.sound.ModSounds;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -46,6 +48,11 @@ public class Disembodiment
                 ModConfigs.SERVER_SPEC,
                 "disembodiment-server.toml"
         );
+        ModLoadingContext.get().registerConfig(
+                ModConfig.Type.CLIENT,
+                ModClientConfigs.CLIENT_SPEC,
+                "disembodiment-client.toml"
+        );
 
 
 
@@ -57,6 +64,8 @@ public class Disembodiment
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
+
+        ModNetworking.register();
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         //context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
