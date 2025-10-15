@@ -1,5 +1,7 @@
 {
   "item.disembodiment.inkor": "Inkor",
+  "tooltip.disembodiment.inkor": "A Dematerializer's favorite food!",
+  "tooltip.disembodiment.inkor.more": "Right-click the Dematerializer to charge it",
   "block.disembodiment.dematerializer": "Dematerializer",
 
   "sounds.disembodiment.dematerializer_start_buffer": "Dematerializer Whirring (Disembodiment)",

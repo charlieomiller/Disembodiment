@@ -65,10 +65,19 @@ public class DematerializerBlockEntity extends BlockEntity {
         setChanged();
     }
 
+    public boolean hasAnyActivePlayers() {
+        for (var e : timers.values()) {
+            if (e.active) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void onBroken(ServerLevel sl) {
         List<UUID> dematerializedPlayers = new ArrayList<>();
         for (Map.Entry<UUID, PlayerTimer> e : timers.entrySet()) {
-            if (e.getValue().active) dematerializedPlayers.add(e.getKey());
+            if (e.getValue().active) { dematerializedPlayers.add(e.getKey()); }
         }
 
         boolean kill = ModConfigs.SERVER.killDematerializedOnBreak.get();
@@ -84,8 +93,25 @@ public class DematerializerBlockEntity extends BlockEntity {
             }
             ModNetworking.CHANNEL.send(
                     net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
-                    new TimerSyncS2C(TimerSyncS2C.Phase.NONE, -0, 0)
+                    new TimerSyncS2C(TimerSyncS2C.Phase.NONE, 0, 0)
             );
+            timers.remove(id);
+        }
+
+        List<UUID> bufferPlayers = new ArrayList<>();
+        for (Map.Entry<UUID, PlayerTimer> e : timers.entrySet()) {
+            if (e.getValue().bufferTicks > 0 && !e.getValue().active) { bufferPlayers.add(e.getKey()); }
+        }
+        for (UUID id : bufferPlayers) {
+            ServerPlayer sp = sl.getServer().getPlayerList().getPlayer(id);
+            if (sp == null) { continue; }
+            ModNetworking.CHANNEL.send(
+                    net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+                    new TimerSyncS2C(TimerSyncS2C.Phase.NONE, 0, 0)
+            );
+            Holder<SoundEvent> sound = ModSounds.DEMATERIALIZER_START_BUFFER.getHolder().orElseThrow(); // Need to use Holder<SoundEvent> for ClientSoundPacket constructor
+            ResourceLocation soundId = sound.value().getLocation();
+            sp.connection.send(new ClientboundStopSoundPacket(soundId, SoundSource.BLOCKS)); // Avoids overlapping buffer noise
             timers.remove(id);
         }
 

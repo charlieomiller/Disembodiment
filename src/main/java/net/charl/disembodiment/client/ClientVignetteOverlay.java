@@ -16,13 +16,13 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Disembodiment.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class ClientVignetteOverlay {
-    private static final ResourceLocation VIGNETTE = new ResourceLocation("minecraft", "textures/misc/vignette.png");
+    private static final ResourceLocation VIGNETTE = new ResourceLocation(Disembodiment.MOD_ID, "textures/misc/white_vignette.png");
     private static final float DEFAULT_TICKS_PER_SEC = 20;
     private static float alpha = 0f;
 
     // pulsing effect parameters
-    private final static float BASE_ALPHA  = 0.50f;
-    private final static float PULSE_AMPL  = 0.25f; // +/- around BASE_ALPHA
+    private final static float BASE_ALPHA  = 0.40f;
+    private final static float PULSE_AMPL  = 0.15f; // +/- around BASE_ALPHA
     private final static float PERIOD_SEC  = 4.0f; // one full pulse every X seconds
 
     private static final IGuiOverlay OVERLAY = (gui, g, partial, w, h) -> {
@@ -50,12 +50,12 @@ public final class ClientVignetteOverlay {
 
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(0.85f, 0.95f, 1.0f, alpha); // slight tint
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha); // slight tint
 
-        // I do not understand this!
+        // stretches the vignette to the entire screen
         g.blit(VIGNETTE, 0, 0, -90, 0, 0, w, h, w, h);
 
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
